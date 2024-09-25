@@ -13,8 +13,7 @@ import ru.otus.bank.service.AccountService;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentProcessorImplTest {
@@ -57,6 +56,40 @@ public class PaymentProcessorImplTest {
 
         paymentProcessor.makeTransfer(sourceAgreement, destinationAgreement,
                 0, 0, BigDecimal.ONE);
+
+    }
+
+    @Test
+    void makeTransferWithComissionTest() {
+        Agreement sourceAgreement = new Agreement();
+        sourceAgreement.setId(1L);
+
+        Agreement destinationAgreement = new Agreement();
+        destinationAgreement.setId(1L);
+
+        Account sourceAccount = new Account();
+        sourceAccount.setAmount(new BigDecimal(23));
+        sourceAccount.setType(0);
+
+        Account destinationAccount = new Account();
+        destinationAccount.setAmount(BigDecimal.ZERO);
+        destinationAccount.setType(0);
+
+        BigDecimal amount = new BigDecimal(100);
+        BigDecimal commissionPercent = new BigDecimal(10);
+
+
+        lenient().when(accountService.getAccounts(argThat(argument -> argument != null
+                && argument.getId() == 1L))).thenReturn(List.of(sourceAccount));
+
+        lenient().when(accountService.getAccounts(argThat(argument -> argument != null
+                && argument.getId() == 1L))).thenReturn(List.of(destinationAccount));
+
+        accountService.charge(sourceAgreement.getId(), amount.negate().multiply(commissionPercent));
+
+        paymentProcessor.makeTransfer(sourceAgreement, destinationAgreement,
+                0, 0, BigDecimal.ONE);
+
 
     }
 
