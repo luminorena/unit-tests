@@ -3,10 +3,7 @@ package ru.otus.bank.service.impl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.ArgumentMatcher;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.otus.bank.dao.AccountDao;
 import ru.otus.bank.entity.Account;
@@ -14,12 +11,11 @@ import ru.otus.bank.entity.Agreement;
 import ru.otus.bank.service.exception.AccountException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -88,20 +84,46 @@ public class AccountServiceImplTest {
         verify(accountDao).save(argThat(destinationMatcher));
         }
 
+
+
         @Test
         void getAllAccountsTest(){
-            Account account = new Account();
-            AccountServiceImpl acc = Mockito.mock(AccountServiceImpl.class);
-            lenient().when(acc.getAccounts().iterator()).thenCallRealMethod();
-            lenient().when(accountDao.findAll()).thenReturn(List.of(account));
+            Account account1 = new Account();
+            account1.setId(1L);
+            account1.setNumber("1");
+            account1.setType(1);
+            account1.setAmount(new BigDecimal(1L));
+            account1.setAgreementId(1L);
+
+            Account account2 = new Account();
+            account2.setId(1L);
+            account2.setNumber("1");
+            account2.setType(1);
+            account2.setAmount(new BigDecimal(1L));
+            account2.setAgreementId(1L);
+
+            List<Account> expectedAccounts = Arrays.asList(account1, account2);
+            when(accountDao.findAll()).thenReturn(expectedAccounts);
+            List<Account> actualAccounts = accountServiceImpl.getAccounts();
+            assertEquals(expectedAccounts, actualAccounts);
+
         }
+
 
         @Test
         void getAccountsByIdTest(){
+            Account account1 = new Account();
+            Account account2 = new Account();
             Agreement agreement = new Agreement();
-            List<Account> accountList = new ArrayList<>();
-            lenient().when(accountServiceImpl.getAccounts(agreement)).thenReturn(accountList);
-            lenient().when(accountDao.findByAgreementId(agreement.getId())).thenReturn(accountList);
+            List<Account> expectedAccounts = Arrays.asList(account1, account2);
+
+
+            when(accountDao.findByAgreementId(agreement.getId()))
+                    .thenReturn(expectedAccounts);
+
+            List<Account> actualAccounts = accountServiceImpl.getAccounts(agreement);
+
+            assertEquals(expectedAccounts, actualAccounts);
         }
 
         @Test
@@ -123,20 +145,19 @@ public class AccountServiceImplTest {
             verify(accountDao).save(argThat(matcher));
         }
 
-
         @Test
         void chargeTest(){
-            Account account = new Account();
-            account.setId(1L);
-            account.setAmount(new BigDecimal(12));
-            account.setNumber("23");
-            account.setType(32);
-            account.setAgreementId(1L);
-            lenient().when(accountDao.findById(1L)).thenReturn(Optional.of(account));
-            lenient().when(accountDao.findById(null)).thenThrow(AccountException.class);
-            accountServiceImpl.charge(1L, new BigDecimal(1));
-            verify(accountDao).save(account);
+           Account account = new Account();
+           account.setId(1L);
+           account.setAmount(new BigDecimal(1));
+           when(accountDao.findById(1L)).thenReturn(Optional.of(account));
 
+            boolean result = accountServiceImpl.charge(1L, new BigDecimal(1));
+            account.setAmount(account.getAmount().subtract(new BigDecimal(1)));
+
+            assertTrue(result);
+
+            verify(accountDao).save(account);
         }
 
 

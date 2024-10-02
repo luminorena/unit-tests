@@ -11,8 +11,10 @@ import ru.otus.bank.entity.Agreement;
 import ru.otus.bank.service.AccountService;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,18 +80,18 @@ public class PaymentProcessorImplTest {
         BigDecimal amount = new BigDecimal(100);
         BigDecimal commissionPercent = new BigDecimal(10);
 
+        when(accountService.getAccounts(sourceAgreement))
+                .thenReturn(List.of(sourceAccount));
+        when(accountService.getAccounts(destinationAgreement))
+                .thenReturn(List.of(destinationAccount));
+        when(accountService.makeTransfer(eq(sourceAccount.getId()),
+                eq(destinationAccount.getId()), eq(amount)))
+                .thenReturn(true);
 
-        lenient().when(accountService.getAccounts(argThat(argument -> argument != null
-                && argument.getId() == 1L))).thenReturn(List.of(sourceAccount));
+        boolean result = paymentProcessor.makeTransferWithComission(sourceAgreement, destinationAgreement,
+                0, 0, amount, commissionPercent);
 
-        lenient().when(accountService.getAccounts(argThat(argument -> argument != null
-                && argument.getId() == 1L))).thenReturn(List.of(destinationAccount));
-
-        accountService.charge(sourceAgreement.getId(), amount.negate().multiply(commissionPercent));
-
-        paymentProcessor.makeTransfer(sourceAgreement, destinationAgreement,
-                0, 0, BigDecimal.ONE);
-
+        assertTrue(result);
 
     }
 
