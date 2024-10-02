@@ -84,4 +84,34 @@ public class PaymentProcessorImplWithSpyTest {
 
     }
 
+    @Test
+    void makeTransferWithComissionTest() {
+        Agreement sourceAgreement = new Agreement();
+        sourceAgreement.setId(1L);
+
+        Agreement destinationAgreement = new Agreement();
+        destinationAgreement.setId(1L);
+
+        Account sourceAccount = new Account();
+        sourceAccount.setAmount(new BigDecimal(23));
+        sourceAccount.setType(0);
+
+        Account destinationAccount = new Account();
+        destinationAccount.setAmount(BigDecimal.ZERO);
+        destinationAccount.setType(0);
+
+        BigDecimal amount = new BigDecimal(100);
+        BigDecimal commissionPercent = new BigDecimal(10);
+
+        lenient().when(accountDao.findById(1L)).thenReturn(Optional.of(sourceAccount));
+        lenient().when(accountDao.findById(2L)).thenReturn(Optional.of(destinationAccount));
+
+        accountService.charge(sourceAgreement.getId(), amount.negate().multiply(commissionPercent));
+
+        assertEquals(new BigDecimal(1023), sourceAccount.getAmount());
+        assertEquals(BigDecimal.ZERO, destinationAccount.getAmount());
+
+
+    }
+
 }
